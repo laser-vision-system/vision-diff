@@ -92,6 +92,10 @@ fn convert_map(map: &LoadedItemMap) -> CSVRows {
 					correlation,
 					intersection,
 				) = collect_metrics(&item, &setpoint);
+
+				#[cfg(debug_assertions)]
+				println!("\nRow created, pushing to Vec...");
+
 				rows.push(CSVItem {
 					position,
 					saturation,
@@ -122,6 +126,9 @@ where
 {
 	for row in rows {
 		writer.serialize(row)?;
+
+		#[cfg(debug_assertions)]
+		println!("\nRow was pushed to CSV!");
 	}
 	Ok(())
 }

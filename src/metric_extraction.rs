@@ -52,6 +52,9 @@ pub fn collect_metrics(
 		gray_similarity_histogram(Metric::Intersection, item.image(), setpoint.image())
 			.unwrap();
 
+	#[cfg(debug_assertions)]
+	println!("Metrics collected!");
+
 	return (
 		setpoint_peak as f32 - item_peak as f32,
 		setpoint_mean - item_mean,
