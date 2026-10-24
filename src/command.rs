@@ -5,9 +5,7 @@ use clap::{
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum Dataset {
-	#[value(name = "synthetic-1")]
 	Synthetic1,
-	#[value(name = "synthetic-2")]
 	Synthetic2,
 	Analogous,
 	#[value(name = "in-lab-single")]
@@ -126,21 +124,20 @@ pub struct TrainArgs {
 	#[arg(long, default_value_t = 0)]
 	exposure_min: u16,
 
-    /// Only data items with exposure values below (inclusive) this value will
+	/// Only data items with exposure values below (inclusive) this value will
 	/// be used in training the model.
 	#[arg(long, default_value_t = u16::MAX)]
 	exposure_max: u16,
 
-    /// Only data items with gamma values above (inclusive) this value will
+	/// Only data items with gamma values above (inclusive) this value will
 	/// be used in training the model.
 	#[arg(long, default_value_t = 0)]
 	gamma_min: u16,
 
-    /// Only data items with exposure values below (inclusive) this value will
+	/// Only data items with exposure values below (inclusive) this value will
 	/// be used in training the model.
 	#[arg(long, default_value_t = u16::MAX)]
 	gamma_max: u16,
-    
 	// Each camera control should be represented here
 }
 
@@ -189,7 +186,7 @@ impl TrainArgs {
 		self.intersection_exp
 	}
 
-	// TODO: Add the rest all the exponents as seen in CSVRowItem
+	// TODO: Add the rest all the exponents for fields as seen in CSVRowItem
 }
 
 pub fn get_train_args() -> TrainArgs {
