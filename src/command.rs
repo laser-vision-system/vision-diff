@@ -3,6 +3,11 @@ use clap::{
 	ValueEnum,
 };
 
+use crate::{
+	Feature,
+	TrainingMethod,
+};
+
 #[derive(Debug, Clone, ValueEnum)]
 pub enum Dataset {
 	Synthetic1,
@@ -10,39 +15,6 @@ pub enum Dataset {
 	Analogous,
 	#[value(name = "in-lab-single")]
 	InLabSingle,
-}
-
-#[derive(Debug, Clone, ValueEnum)]
-pub enum Sigma {
-	#[value(name = "0.0", alias = "0")]
-	S00,
-	#[value(name = "0.8")]
-	S08,
-	#[value(name = "1.1")]
-	S11,
-	#[value(name = "1.4")]
-	S14,
-	#[value(name = "1.7")]
-	S17,
-}
-
-#[derive(Debug, Clone, ValueEnum)]
-pub enum TrainingMethod {
-	LinearRegression,
-	RidgeRegression,
-	Lasso,
-	ElasticNet,
-}
-
-#[derive(Debug, Clone, ValueEnum)]
-pub enum Feature {
-	PeakDiff,
-	MeanDiff,
-	StdDevDiff,
-	LumaSSIM,
-	Hellinger,
-	Correlation,
-	Intersection,
 }
 
 #[derive(Debug, Parser)]
