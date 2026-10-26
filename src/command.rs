@@ -4,7 +4,7 @@ use clap::{
 };
 
 use crate::{
-	Feature,
+	Column,
 	TrainingMethod,
 };
 
@@ -34,14 +34,14 @@ pub struct TrainArgs {
 	/// If both this flag and --include is omitted, all features will be
 	/// included. This flag is ignored if --include is provided.
 	#[arg(long, num_args = 0..)]
-	exclude: Vec<Feature>,
+	exclude: Vec<Column>,
 
 	/// Features to be included in training this model.
 	/// If both this flag and --include is omitted, all features will be
 	/// included. Providing this flag will cause the --exclude flag to be
 	/// ignored.
 	#[arg(long, num_args = 0..)]
-	include: Vec<Feature>,
+	include: Vec<Column>,
 
 	/// The exponent to be placed on the feature peak_diff.
 	/// Defaults to 1.
@@ -122,11 +122,11 @@ impl TrainArgs {
 		&self.method
 	}
 
-	pub fn excluded_features(&self) -> &[Feature] {
+	pub fn excluded_features(&self) -> &[Column] {
 		&self.exclude
 	}
 
-	pub fn included_features(&self) -> &[Feature] {
+	pub fn included_features(&self) -> &[Column] {
 		&self.include
 	}
 

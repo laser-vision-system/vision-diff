@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+
+use burn::data::dataset::transform::Mapper;
 use dataset_loader::{
 	self,
 	augmentation::blur::Gaussian,
@@ -15,16 +18,16 @@ use dataset_loader::{
 	},
 };
 
-use crate::mapping::{
-	AnalogousItemMapper,
-	InLabSingleItemMapper,
-	LoadedItem,
+use crate::{
+	item::{self, LoadedItem}, mapping::{
+		AnalogousItemMapper,
+		InLabSingleItemMapper,
+	},
 };
 
 pub fn analogous_dataset(
 	blur: Gaussian
 ) -> LaserDataset<AnalogousItemMapper, AnalogousLaserItem, LoadedItem> {
-	
 	#[cfg(debug_assertions)]
 	println!("Creating an analogous dataset...");
 
@@ -90,4 +93,24 @@ pub fn in_lab_single_dataset(
 		},
 	};
 	dataset
+}
+
+pub struct Dataset<M, MI, MO, G, D>
+where
+	M: Mapper<MI, MO> + Send + Sync,
+	MI: Send + Sync + Clone + LaserItem,
+	MO: Send + Sync + Clone + LoadedItem<G, D>,
+{
+	dataset: LaserDataset<M, MI, MO>,
+}
+
+impl<M, MI, MO, G, D> Dataset<M, MI, MO, G, D>
+where
+	M: Mapper<MI, MO> + Send + Sync,
+	MI: Send + Sync + Clone + LaserItem,
+	MO: Send + Sync + Clone + LoadedItem<G, D>,
+{
+	pub fn build_hashmap() -> HashMap<G, Vec<D>> {
+		
+	}
 }

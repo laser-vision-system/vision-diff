@@ -5930,6 +5930,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "smartcore"
+version = "0.6.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3fdeed8d6b33ec4ade226c614453e0279adb49e6754a199a718563760f654588"
+dependencies = [
+ "approx",
+ "cfg-if",
+ "num",
+ "num-traits",
+ "ordered-float 5.5.0",
+ "rand 0.10.3",
+]
+
+[[package]]
 name = "socket2"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7043,6 +7057,8 @@ dependencies = [
  "image-compare",
  "rand 0.10.3",
  "serde",
+ "smartcore",
+ "strum",
 ]
 
 [[package]]
