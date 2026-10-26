@@ -17,15 +17,25 @@ pub fn filter_and_transform(
 ) -> (Vec<Vec<f32>>, Vec<String>) {
     let matrix: Vec<Vec<f32>> = Vec::new();
 
-    for 
+    let records = reader.records();
 
-	if args.included_features().len() > 0 {
-        for column in args.included_features() {
-            
+    for row in records {
+        let new_row = Vec<f32>;
+        if args.included_features().len() > 0 {
+            // included features arm
+            for column in args.included_features() {
+                
+            }
+        } else if args.excluded_features().len() > 0 {
+            // excluded features arm
+        } else {
+            // all features arm
         }
-    } else if args.excluded_features().len() > 0 {
-        // excluded features arm
-    } else {
-        // all features arm
     }
+
+}
+
+/// A struct to define how a row should look immediately after being read from file.
+struct TempRow {
+    
 }

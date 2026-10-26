@@ -11,6 +11,8 @@ pub mod transform;
 /// Ths single source of truth for any .csv file created by the csv builder part
 /// of this application and the expected format of any .csv file used to build a
 /// model using this application.
+/// 
+/// Is tied to the Column eum.
 pub struct CSVRowItem {
 	peak_diff: f32,
 	mean_diff: f32,
@@ -24,26 +26,69 @@ pub struct CSVRowItem {
 	peak: f32,
 	mean: f32,
 	std_dev: f32,
+	white_balance: f32,
+	brightness: f32,
+	contrast: f32,
+	hue: f32,
+	saturation: f32,
+	sharpness: f32,
+	gamma: f32,
+	gain: f32,
+	exposure_absolute: f32,
+}
+
+impl CSVRowItem {
+	pub fn get(&self, field: Column) -> f32 {
+		match field {
+			PeakDiff => self.peak_diff,
+			MeanDiff => self.mean_diff,
+			StdDevDiff => self.std_dev_diff,
+			LumaSSIM => self.luma_ssim,
+			Hellinger => self.hellinger,
+			Correlation => self.correlation,
+			Intersection => self.intersection,
+			Intensity => self.intensity,
+			SetpointIntensity => self.setpoint_intensity,
+			Peak => self.peak,
+			Mean => self.mean,
+			StdDev => self.std_dev,
+			WhiteBalance => self.white_balance,
+			Brightness => self.brightness,
+			Contrast => self.contrast,
+			Hue => self.hue,
+			Saturation => self.saturation,
+			Sharpness => self.sharpness,
+			Gamma => self.gamma,
+			Gain => self.gain,
+			ExposureAbsolute => self.exposure_absolute,
+		}
+	}
 }
 
 #[repr(usize)]
 #[derive(Debug, Clone, ValueEnum)]
 pub enum Column {
-	Saturation = 0,
-	Exposure = 1,
-	Gamma = 2,
-	Peak = 3,
-	Mean = 4,
-	StdDev = 5,
-	Intensity = 6,
-	SetpointIntensity = 7,
-	PeakDiff = 8,
-	MeanDiff = 9,
-	StdDevDiff = 10,
-	LumaSSIM = 11,
-	Hellinger = 12,
-	Correlation = 13,
-	Intersection = 14,
+	PeakDiff = 0,
+	MeanDiff = 1,
+	StdDevDiff = 2,
+	LumaSSIM = 3,
+	Hellinger = 4,
+	Correlation = 5,
+	Intersection = 6,
+	Intensity = 7,
+	SetpointIntensity = 8,
+	Peak = 9,
+	Mean = 10,
+	StdDev = 11,
+	WhiteBalance = 12,
+	Brightness = 13,
+	Contrast = 14,
+	Hue = 15,
+	Saturation = 16,
+	Sharpness = 17,
+	Gamma = 18,
+	Gain = 19,
+	ExposureAbsolute = 20,
 }
 
 #[derive(Debug, Clone, ValueEnum)]
