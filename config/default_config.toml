@@ -67,8 +67,9 @@ solver = "SVD"
 # Every feature has the same configuration structure:
 # - include: whether or not to include this feature when creating your model
 # - min: A row that contains a value below this number for that particular feature will not be included. If omitted, no min value will be used.
-# - min: A row that contains a value above this number for that particular feature will not be included. If omitted, no max value will be used.
-#       ! This is true regardless of whether or not the feature is included or not !
+#       NOTE: This allows you to filter the input data irrespective of the `include` bool.
+# - max: A row that contains a value above this number for that particular feature will not be included. If omitted, no max value will be used.
+#       NOTE: This allows you to filter the input data irrespective of the `include` bool.
 # - exponent: The power with which to raise this feature to. If omitted, will default to 1.
 #
 # Every feature must be represented in this file.
