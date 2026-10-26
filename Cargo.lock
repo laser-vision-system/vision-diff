@@ -7059,6 +7059,7 @@ dependencies = [
  "serde",
  "smartcore",
  "strum",
+ "toml",
 ]
 
 [[package]]

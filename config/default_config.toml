@@ -1,0 +1,199 @@
+[general]
+input_data = "in-lab-single_sigma-0.8.csv" # The name of the csv file used to build the model.
+# This must be in the following location:
+# ./current/working/directory
+# └─ computed-metrics
+#    ├─ example1.csv
+#    ├─ example2.csv
+#    ├─ example3.csv
+
+
+output_name = "model-1" # What you would like to name your model.
+# For example, using the name "my-model", the output might look like this:
+#
+# ./current/working/directory
+# └─ models
+#    ├─ my-model
+#    |  ├─ my-model.json
+#    |  └─ my-model_info.txt
+#    └─ existing-model
+#       ├─ existing_model.json
+#       └─ existing_model_info.txt
+
+splitting_seed = 42 # The seed used to randomly split the data into training and testing data.
+test_size = 0.2 # The percentage of data used to test the model.
+
+[model] # The type of regression model used to fit the data.
+# The options are:
+# - type = "linear-regression"
+# - type = "ridge-regression"
+# - type = "lasso"
+# - type = "elastic-net"
+# For more information, see here:
+# https://smartcorelib.org/user_guide/supervised.html#linear-models
+#
+# Each model type requires a unique set of parameters.
+# The following examples provide the default values for these parameters:
+#
+# Linear regression: https://docs.rs/smartcore/latest/smartcore/linear/linear_regression/struct.LinearRegressionParameters.html
+# type = "linear-regression"
+# solver = "SVD"
+#
+# Ridge regression: https://docs.rs/smartcore/latest/smartcore/linear/ridge_regression/struct.RidgeRegressionParameters.html
+# type = "ridge-regression"
+# solver = "SVD"
+# alpha = 1.0
+# normalize = true
+#
+# LASSO: https://docs.rs/smartcore/latest/smartcore/linear/lasso/struct.LassoParameters.html
+# type = "lasso"
+# alpha = 1.0
+# normalize = true
+# tol = 1e-4
+# max_iter = 1000
+# fit_intercept = true
+#
+# Elastic net: https://docs.rs/smartcore/latest/smartcore/linear/elastic_net/struct.ElasticNetParameters.html
+# type = elastic-net"
+# alpha = 1.0
+# l1_ratio: 0.5,
+# normalize: true,
+# tol: 1e-4,
+# max_iter: 1000,
+type = "linear-regression"
+solver = "SVD"
+
+# The following configurations are for each column (feature) in a given computed-metrics data file (.csv file).
+# Every feature has the same configuration structure:
+# - include: whether or not to include this feature when creating your model
+# - min: A row that contains a value below this number for that particular feature will not be included. If omitted, no min value will be used.
+# - min: A row that contains a value above this number for that particular feature will not be included. If omitted, no max value will be used.
+#       ! This is true regardless of whether or not the feature is included or not !
+# - exponent: The power with which to raise this feature to. If omitted, will default to 1.
+#
+# Every feature must be represented in this file.
+[feature.peak_diff]
+include = true
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.mean_diff]
+include = true
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.std_dev_diff]
+include = true
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.luma_ssim]
+include = true
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.hellinger]
+include = true
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.correlation]
+include = true
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.intersection]
+include = true
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.intensity]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.setpoint_intensity]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.peak]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.mean]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.std_dev]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.white_balance]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.brightness]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.contrast]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.hue]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.saturation]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.sharpness]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.gamma]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.gain]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1
+
+[feature.exposure_absolute]
+include = false
+# min = -32768.0
+# max = 32768.0
+# exponent = 1

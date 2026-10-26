@@ -16,6 +16,7 @@ serde = { version = "1", default-features = false, features = [
 clap = { version = "4.6.7", features = ["derive"] }
 smartcore = "0.6.16"
 strum = "0.28.0"
+toml = "1.1.8"
 
 [lints.rust]
 unsafe_code = "deny" # We should avoid using unsafe code as much as possible.
