@@ -72,7 +72,8 @@ solver = "SVD"
 #       NOTE: This allows you to filter the input data irrespective of the `include` bool.
 # - exponent: The power with which to raise this feature to. If omitted, will default to 1.
 #
-# Every feature must be represented in this file.
+# Every feature MUST be represented in this file. No features may be omitted.
+# If you do not wish to include a feature in in training the model, please use `include = false`.
 [feature.peak_diff]
 include = true
 # min = -32768.0

@@ -46,7 +46,7 @@ impl GeneralConfig {
 	}
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub struct FeatureConfig {
 	include: bool,
 	min: Option<f32>,
@@ -72,6 +72,10 @@ impl FeatureConfig {
 	pub fn exponent(&self) -> f32 {
 		self.exponent
 	}
+}
+
+fn default_exp() -> f32 {
+	1.0
 }
 
 #[derive(Debug, Deserialize)]
@@ -113,10 +117,6 @@ pub enum RidgeRegressionSolver {
 	SVD,
 }
 
-fn default_exp() -> f32 {
-	1.0
-}
-
 #[derive(Debug, Deserialize)]
 pub struct Config {
 	general: GeneralConfig,
@@ -136,6 +136,19 @@ impl Config {
 	pub fn features(&self) -> &HashMap<String, FeatureConfig> {
 		&self.features
 	}
+
+	pub fn included_features(&self) -> HashMap<String, FeatureConfig> {
+		let mut map: HashMap<String, FeatureConfig> = HashMap::new();
+
+		map.extend(
+			self.features
+				.iter()
+				.filter(|(_, feature_config)| feature_config.include())
+				.map(|(key, value)| (key.clone(), (value.clone())))
+		);
+
+		map
+	}
 }
 
 pub fn read_config() -> Result<Config, Box<dyn Error>> {
@@ -148,11 +161,11 @@ pub fn read_config() -> Result<Config, Box<dyn Error>> {
 	Ok(config)
 }
 
-#[derive(Debug, Clone, ValueEnum)]
-pub enum Dataset {
-	Synthetic1,
-	Synthetic2,
-	Analogous,
-	#[value(name = "in-lab-single")]
-	InLabSingle,
-}
+// #[derive(Debug, Clone, ValueEnum)]
+// pub enum Dataset {
+// 	Synthetic1,
+// 	Synthetic2,
+// 	Analogous,
+// 	#[value(name = "in-lab-single")]
+// 	InLabSingle,
+// }

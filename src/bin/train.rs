@@ -4,24 +4,35 @@ use std::{
 	process,
 };
 
-use vision_diff::{
-	command::get_train_args,
-	path::resolve_path,
-};
-
 use csv::Reader;
+use vision_diff::{
+	CSVRowItem,
+	Column,
+	config::read_config,
+	path::resolve_path,
+	transform::CSVMatrix,
+};
 
 fn main() -> Result<(), Box<dyn Error>> {
 	run()
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
-	let args = get_train_args();
-	let csv_path: Path = resolve_path(args.data())?.into();
+	let config = read_config()?;
+	let mut csv_reader = Reader::from_path(config.general().input_data_dir())?;
+	// let mut reader_iter = csv_reader.deserialize();
+	let mut matrix: CSVMatrix = CSVMatrix(Vec::new());
 
-    let csv_reader= Reader::from_path(csv_path)?;
+	for result in csv_reader.deserialize() {
+		let row: CSVRowItem = result?;
+		matrix.0.push(row);
+	}
 
-    
+	let (matrix, included_features) = matrix.transform(&config)?;
+
+	
+
+	
 
 	Ok(())
 }
