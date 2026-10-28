@@ -69,6 +69,14 @@ fn run() -> Result<(), Box<dyn Error>> {
 
 	let (x, y, included_features) = matrix.transform(&config)?;
 
+	// #[cfg(debug_assertions)]
+	// {
+	// 	println!("Target values:");
+	// 	for target in &y {
+	// 		println!("{target}")
+	// 	}
+	// }
+
 	let (x_train, x_test, y_train, y_test) = train_test_split(
 		&x,
 		&y,

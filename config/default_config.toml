@@ -127,14 +127,14 @@ include = true
 [[features]]
 feature = "Intensity"
 include = false
-# min = -32768.0
+min = 0.001   # This value should never be 0 or below!!
 # max = 32768.0
 # exponent = 1
 
 [[features]]
 feature = "SetpointIntensity"
 include = false
-# min = -32768.0
+min = 0.001   # This value should never be 0 or below!!
 # max = 32768.0
 # exponent = 1
 

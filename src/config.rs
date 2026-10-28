@@ -217,7 +217,7 @@ impl Config {
 	}
 
 	pub fn output_data_path(&self) -> PathBuf {
-		Path::new(DEFAULT_DATA_DIR)
+		Path::new(DEFAULT_MODEL_DIR)
 			.join(format!("{}.toml", &self.general.output_name))
 	}
 }
