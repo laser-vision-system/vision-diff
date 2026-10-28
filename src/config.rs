@@ -1,14 +1,20 @@
 use std::{
 	collections::HashMap,
 	error::Error,
-	path::Path,
+	path::{
+		Path,
+		PathBuf,
+	},
 };
 
 use clap::{
 	Parser,
 	ValueEnum,
 };
-use serde::Deserialize;
+use serde::{
+	Deserialize,
+	Serialize,
+};
 use smartcore::linear::{
 	linear_regression::{
 		LinearRegressionParameters,
@@ -28,13 +34,13 @@ const DEFAULT_CONFIG_DIR: &str = "./config";
 
 #[derive(Debug, Parser)]
 struct CliArgs {
-	#[arg(long, short = 'c')]
-	config: String,
+	#[arg(long)]
+	config: PathBuf,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct GeneralConfig {
-	input_data_dir: String,
+	input_data: String,
 	output_name: String,
 	test_size: f32,
 	shuffle: bool,
@@ -42,10 +48,6 @@ pub struct GeneralConfig {
 }
 
 impl GeneralConfig {
-	pub fn input_data_dir(&self) -> &str {
-		&self.input_data_dir
-	}
-
 	pub fn output_name(&self) -> &str {
 		&self.output_name
 	}
@@ -65,6 +67,7 @@ impl GeneralConfig {
 
 #[derive(Debug, Deserialize, Clone, Copy)]
 pub struct FeatureConfig {
+	feature: Column,
 	include: bool,
 	min: Option<f32>,
 	max: Option<f32>,
@@ -74,6 +77,9 @@ pub struct FeatureConfig {
 }
 
 impl FeatureConfig {
+	pub fn column(&self) -> &Column {
+		&self.feature
+	}
 	pub fn include(&self) -> bool {
 		self.include
 	}
@@ -95,7 +101,7 @@ fn default_exp() -> f32 {
 	1.0
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Model {
 	LinearRegression {
@@ -122,7 +128,7 @@ pub enum Model {
 	},
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 pub enum LinearRegressionSolver {
 	QR,
 	SVD,
@@ -137,7 +143,7 @@ impl From<&LinearRegressionSolver> for LinearRegressionSolverName {
 	}
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 pub enum RidgeRegressionSolver {
 	Cholesky,
 	SVD,
@@ -158,7 +164,7 @@ impl From<&RidgeRegressionSolver> for RidgeRegressionSolverName {
 pub struct Config {
 	general: GeneralConfig,
 	model: Model,
-	features: Vec<(String, FeatureConfig)>,
+	features: Vec<FeatureConfig>,
 }
 
 impl Config {
@@ -170,22 +176,49 @@ impl Config {
 		&self.model
 	}
 
-	pub fn features(&self) -> &Vec<(String, FeatureConfig)> {
+	pub fn features(&self) -> &Vec<FeatureConfig> {
 		&self.features
 	}
 
 	pub fn included_features(
 		&self
-	) -> Result<Vec<(Column, FeatureConfig)>, Box<dyn Error>> {
-		let mut output: Vec<(Column, FeatureConfig)> = Vec::new();
+	) -> Result<Vec<FeatureConfig>, Box<dyn Error>> {
+		let mut output: Vec<FeatureConfig> = Vec::new();
 
-		for (feature, feature_config) in &self.features {
-			if feature_config.include() {
-				output.push((feature.as_str().try_into()?, *feature_config))
+		for feature in &self.features {
+			if feature.include() {
+				output.push(*feature);
 			}
 		}
 
 		Ok(output)
+	}
+
+	pub fn model_file_exists(&self) -> bool {
+		Path::new(DEFAULT_MODEL_DIR)
+			.join(format!("{}.toml", &self.general.output_name))
+			.exists()
+	}
+
+	pub fn model_dir_exists(&self) -> bool {
+		Path::new(DEFAULT_MODEL_DIR).exists()
+	}
+
+	pub fn input_data_parent_dir(&self) -> PathBuf {
+		Path::new(DEFAULT_DATA_DIR).into()
+	}
+
+	pub fn input_data_path(&self) -> PathBuf {
+		Path::new(DEFAULT_DATA_DIR).join(&self.general.input_data)
+	}
+
+	pub fn output_data_parent_dir(&self) -> PathBuf {
+		Path::new(DEFAULT_MODEL_DIR).into()
+	}
+
+	pub fn output_data_path(&self) -> PathBuf {
+		Path::new(DEFAULT_DATA_DIR)
+			.join(format!("{}.toml", &self.general.output_name))
 	}
 }
 
@@ -195,6 +228,9 @@ pub fn read_config() -> Result<Config, Box<dyn Error>> {
 		Path::new(DEFAULT_CONFIG_DIR).join(args.config),
 	)?;
 	let config: Config = toml::from_str(&config_contents)?;
+
+	#[cfg(debug_assertions)]
+    println!("Successfully read in config!");
 
 	Ok(config)
 }

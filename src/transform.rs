@@ -38,8 +38,8 @@ impl CSVMatrix {
 
 			let mut new_row: Vec<f32> = Vec::new();
 
-			for (feature, feature_config) in &included_features {
-				new_row.push(row.get(feature).powf(feature_config.exponent()))
+			for feature in &included_features {
+				new_row.push(row.get(feature.column()).powf(feature.exponent()))
 			}
 
 			matrix.push(new_row);
@@ -47,10 +47,8 @@ impl CSVMatrix {
 
 		let matrix = DenseMatrix::from_2d_vec(&matrix)?;
 
-		let included_features: Vec<Column> = included_features
-			.into_iter()
-			.map(|(column, _)| column)
-			.collect();
+		let included_features: Vec<Column> =
+			included_features.into_iter().map(|f| *f.column()).collect();
 
 		Ok((matrix, target, included_features))
 	}
@@ -67,11 +65,10 @@ fn all_features_within_bounds(
 		))));
 	} else {
 		let mut valid = true;
-		for (feature, feature_config) in config.features() {
-			let column: Column = feature.as_str().try_into()?;
-			let value = row.get(&column);
-			let min = feature_config.min();
-			let max = feature_config.max();
+		for feature in config.features() {
+			let value = row.get(feature.column());
+			let min = feature.min();
+			let max = feature.max();
 
 			valid = valid && within_bounds(value, min, max);
 

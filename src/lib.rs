@@ -1,5 +1,8 @@
 use clap::ValueEnum;
-use serde::Deserialize;
+use serde::{
+	Deserialize,
+	Serialize,
+};
 use strum::EnumIter;
 
 use crate::config::{
@@ -77,7 +80,18 @@ impl CSVRowItem {
 }
 
 #[repr(usize)]
-#[derive(Debug, Clone, ValueEnum, EnumIter, Eq, PartialEq, Hash)]
+#[derive(
+	Debug,
+	Clone,
+	Copy,
+	ValueEnum,
+	EnumIter,
+	Eq,
+	PartialEq,
+	Hash,
+	Serialize,
+	Deserialize,
+)]
 pub enum Column {
 	PeakDiff = 0,
 	MeanDiff = 1,
@@ -161,6 +175,7 @@ impl TryFrom<&str> for Column {
 	}
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Output {
 	model: Model,
 	features: Vec<FeatureOutput>,
@@ -184,6 +199,7 @@ impl Output {
 	}
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct FeatureOutput {
 	feature: Column,
 	coefficient: f32,
@@ -222,6 +238,7 @@ impl From<(Column, f32, FeatureConfig)> for FeatureOutput {
 	}
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Accuracy {
 	mean_absolute_error: f64,
 	mean_squared_error: f64,

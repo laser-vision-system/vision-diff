@@ -61,7 +61,7 @@ test_size = 0.2 # The percentage of data used to test the model.
 # normalize: true,
 # tol: 1e-4,
 # max_iter: 1000,
-type = "linear-regression"
+type = "linear_regression"
 solver = "SVD"
 
 # The following configurations are for each column (feature) in a given computed-metrics data file (.csv file).
@@ -75,127 +75,148 @@ solver = "SVD"
 #
 # Every feature MUST be represented in this file. No features may be omitted.
 # If you do not wish to include a feature in in training the model, please use `include = false`.
-[feature.peak_diff]
+[[features]]
+feature = "PeakDiff"
 include = true
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.mean_diff]
+[[features]]
+feature = "MeanDiff"
 include = true
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.std_dev_diff]
+[[features]]
+feature = "StdDevDiff"
 include = true
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.luma_ssim]
+[[features]]
+feature = "LumaSSIM"
 include = true
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.hellinger]
+[[features]]
+feature = "Hellinger"
 include = true
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.correlation]
+[[features]]
+feature = "Correlation"
 include = true
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.intersection]
+[[features]]
+feature = "Intersection"
 include = true
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.intensity]
+[[features]]
+feature = "Intensity"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.setpoint_intensity]
+[[features]]
+feature = "SetpointIntensity"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.peak]
+[[features]]
+feature = "Peak"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.mean]
+[[features]]
+feature = "Mean"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.std_dev]
+[[features]]
+feature = "StdDev"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.white_balance]
+[[features]]
+feature = "WhiteBalance"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.brightness]
+[[features]]
+feature = "Brightness"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.contrast]
+[[features]]
+feature = "Contrast"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.hue]
+[[features]]
+feature = "Hue"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.saturation]
+[[features]]
+feature = "Saturation"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.sharpness]
+[[features]]
+feature = "Sharpness"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.gamma]
+[[features]]
+feature = "Gamma"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.gain]
+[[features]]
+feature = "Gain"
 include = false
 # min = -32768.0
 # max = 32768.0
 # exponent = 1
 
-[feature.exposure_absolute]
+[[features]]
+feature = "ExposureAbsolute"
 include = false
 # min = -32768.0
 # max = 32768.0
