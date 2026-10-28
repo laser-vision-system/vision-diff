@@ -20,7 +20,8 @@ output_name = "model-1" # What you would like to name your model.
 #       ├─ existing_model.json
 #       └─ existing_model_info.txt
 
-splitting_seed = 42 # The seed used to randomly split the data into training and testing data.
+splitting_seed = 42 # The seed used to randomly split the data into training and testing data. Optional.
+shuffle = true # Whether or shuffle the data records before performing the split
 test_size = 0.2 # The percentage of data used to test the model.
 
 [model] # The type of regression model used to fit the data.

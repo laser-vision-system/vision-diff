@@ -2,6 +2,11 @@ use clap::ValueEnum;
 use serde::Deserialize;
 use strum::EnumIter;
 
+use crate::config::{
+	FeatureConfig,
+	Model,
+};
+
 pub mod config;
 pub mod dataset;
 pub mod fit;
@@ -152,6 +157,87 @@ impl TryFrom<&str> for Column {
 			"gain" => Ok(Column::Gain),
 			"exposure_absolute" => Ok(Column::ExposureAbsolute),
 			_ => Err(format!("Unknown column variant: {value}")),
+		}
+	}
+}
+
+pub struct Output {
+	model: Model,
+	features: Vec<FeatureOutput>,
+	intercept: f32,
+	accuracy: Accuracy,
+}
+
+impl Output {
+	pub fn new(
+		model: Model,
+		features: Vec<FeatureOutput>,
+		intercept: f32,
+		accuracy: Accuracy,
+	) -> Self {
+		Output {
+			model,
+			features,
+			intercept,
+			accuracy,
+		}
+	}
+}
+
+pub struct FeatureOutput {
+	feature: Column,
+	coefficient: f32,
+	min: Option<f32>,
+	max: Option<f32>,
+	exponent: f32,
+}
+
+impl FeatureOutput {
+	pub fn new(
+		feature: Column,
+		coefficient: f32,
+		min: Option<f32>,
+		max: Option<f32>,
+		exponent: f32,
+	) -> Self {
+		FeatureOutput {
+			feature,
+			coefficient,
+			min,
+			max,
+			exponent,
+		}
+	}
+}
+
+impl From<(Column, f32, FeatureConfig)> for FeatureOutput {
+	fn from(value: (Column, f32, FeatureConfig)) -> Self {
+		FeatureOutput {
+			feature: value.0,
+			coefficient: value.1,
+			min: value.2.min(),
+			max: value.2.max(),
+			exponent: value.2.exponent(),
+		}
+	}
+}
+
+pub struct Accuracy {
+	mean_absolute_error: f64,
+	mean_squared_error: f64,
+	r_squared: f64,
+}
+
+impl Accuracy {
+	pub fn new(
+		mean_absolute_error: f64,
+		mean_squared_error: f64,
+		r_squared: f64,
+	) -> Self {
+		Accuracy {
+			mean_absolute_error,
+			mean_squared_error,
+			r_squared,
 		}
 	}
 }

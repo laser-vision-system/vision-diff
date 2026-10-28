@@ -3,6 +3,8 @@ use std::{
 	error::Error,
 };
 
+use smartcore::linalg::basic::matrix::DenseMatrix;
+
 use crate::{
 	CSVRowItem,
 	Column,
@@ -18,18 +20,10 @@ impl CSVMatrix {
 	pub fn transform(
 		self,
 		config: &Config,
-	) -> Result<(Vec<Vec<f32>>, Vec<f32>, Vec<Column>), Box<dyn Error>> {
+	) -> Result<(DenseMatrix<f32>, Vec<f32>, Vec<Column>), Box<dyn Error>> {
 		let mut matrix: Vec<Vec<f32>> = Vec::new();
-		let mut included_features: HashMap<Column, FeatureConfig> =
-			HashMap::new();
+		let included_features = config.included_features()?;
 		let mut target: Vec<f32> = Vec::new();
-
-		for (feature, feature_config) in config.features() {
-			if feature_config.include() {
-				included_features
-					.insert(feature.as_str().try_into()?, *feature_config);
-			}
-		}
 
 		for row in self.0 {
 			if !all_features_within_bounds(&row, config)? {
@@ -51,13 +45,12 @@ impl CSVMatrix {
 			matrix.push(new_row);
 		}
 
-		let mut included_features: Vec<Column> = Vec::new();
+		let matrix = DenseMatrix::from_2d_vec(&matrix)?;
 
-		for (feature, feature_config) in config.features() {
-			if feature_config.include() {
-				included_features.push(feature.as_str().try_into()?);
-			}
-		}
+		let included_features: Vec<Column> = included_features
+			.into_iter()
+			.map(|(column, _)| column)
+			.collect();
 
 		Ok((matrix, target, included_features))
 	}

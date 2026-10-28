@@ -5,12 +5,23 @@ use std::{
 };
 
 use csv::Reader;
+use smartcore::{
+	linear::{elastic_net::{ElasticNet, ElasticNetParameters}, lasso::{Lasso, LassoParameters}, linear_regression::{
+		LinearRegression,
+		LinearRegressionParameters,
+		LinearRegressionSolverName,
+	}, ridge_regression::{RidgeRegression, RidgeRegressionParameters, RidgeRegressionSolverName}}, metrics::{
+		accuracy,
+		mean_absolute_error,
+		mean_squared_error,
+		r2,
+	}, model_selection::train_test_split,
+};
 use vision_diff::{
-	CSVRowItem,
-	Column,
-	config::read_config,
-	path::resolve_path,
-	transform::CSVMatrix,
+	Accuracy, CSVRowItem, Column, FeatureOutput, Output, config::{
+		Model,
+		read_config,
+	}, path::resolve_path, transform::CSVMatrix,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -28,11 +39,177 @@ fn run() -> Result<(), Box<dyn Error>> {
 		matrix.0.push(row);
 	}
 
-	let (matrix, included_features) = matrix.transform(&config)?;
+	let (x, y, included_features) = matrix.transform(&config)?;
 
-	
+	let (x_train, x_test, y_train, y_test) = train_test_split(
+		&x,
+		&y,
+		config.general().test_size(),
+		config.general().shuffle(),
+		config.general().splitting_seed(),
+	);
 
-	
+	let output_model: Output = match config.model() {
+		Model::LinearRegression {
+			solver
+		} => {
+			let smartcore_solver: LinearRegressionSolverName = solver.into();
+			let parameters = LinearRegressionParameters {
+				solver: smartcore_solver,
+			};
+			let model = LinearRegression::fit(&x_train, &y_train, parameters)?;
+
+			let coefficients = model.coefficients();
+			let zipped_features: Vec<FeatureOutput> = included_features
+				.iter()
+				.map(|f| f.clone())
+				.zip(coefficients.iter().map(|c| *c))
+				.zip(config.features().iter().map(|f| f.1 ))
+				.map(|((col, coef), feat)| (col, coef, feat).into())
+				.collect();
+
+			let intercept = model.intercept();
+
+			let predictions = model.predict(&x_test)?;
+			let mae = mean_absolute_error(&y_test, &predictions);
+			let mse = mean_squared_error(&y_test, &predictions);
+			let r2_score = r2(&y_test, &predictions);
+
+			let accuracy = Accuracy::new(mae, mse, r2_score);
+
+			Output::new(
+				*config.model(),
+				zipped_features,
+				*intercept,
+				accuracy,
+			)
+		},
+
+		Model::RidgeRegression {
+			solver,
+			alpha,
+			normalize,
+		} => {
+			let smartcore_solver: RidgeRegressionSolverName = solver.into();
+			let parameters = RidgeRegressionParameters {
+				solver: smartcore_solver,
+				alpha: *alpha,
+				normalize: *normalize,
+			};
+			let model = RidgeRegression::fit(&x_train, &y_train, parameters)?;
+
+			let coefficients = model.coefficients();
+			let zipped_features: Vec<FeatureOutput> = included_features
+				.iter()
+				.map(|f| f.clone())
+				.zip(coefficients.iter().map(|c| *c))
+				.zip(config.features().iter().map(|f| f.1 ))
+				.map(|((col, coef), feat)| (col, coef, feat).into())
+				.collect();
+
+			let intercept = model.intercept();
+
+			let predictions = model.predict(&x_test)?;
+			let mae = mean_absolute_error(&y_test, &predictions);
+			let mse = mean_squared_error(&y_test, &predictions);
+			let r2_score = r2(&y_test, &predictions);
+			
+			let accuracy = Accuracy::new(mae, mse, r2_score);
+
+			Output::new(
+				*config.model(),
+				zipped_features,
+				*intercept,
+				accuracy,
+			)
+		},
+
+		Model::Lasso {
+			alpha,
+			normalize,
+			tol,
+			max_iter,
+			fit_intercept,
+		} => {
+			let parameters = LassoParameters {
+				alpha: *alpha as f64,
+				normalize: *normalize,
+				tol: *tol as f64,
+				max_iter: *max_iter as usize,
+				fit_intercept: *fit_intercept,
+			};
+
+			let model = Lasso::fit(&x_train, &y_train, parameters)?;
+
+			let coefficients = model.coefficients();
+			let zipped_features: Vec<FeatureOutput> = included_features
+				.iter()
+				.map(|f| f.clone())
+				.zip(coefficients.iter().map(|c| *c))
+				.zip(config.features().iter().map(|f| f.1 ))
+				.map(|((col, coef), feat)| (col, coef, feat).into())
+				.collect();
+
+			let intercept = model.intercept();
+
+			let predictions = model.predict(&x_test)?;
+			let mae = mean_absolute_error(&y_test, &predictions);
+			let mse = mean_squared_error(&y_test, &predictions);
+			let r2_score = r2(&y_test, &predictions);
+			
+			let accuracy = Accuracy::new(mae, mse, r2_score);
+
+			Output::new(
+				*config.model(),
+				zipped_features,
+				*intercept,
+				accuracy,
+			)
+		},
+
+		Model::ElasticNet {
+			alpha,
+			l1_ratio,
+			normalize,
+			tol,
+			max_iter,
+		} => {
+			let parameters = ElasticNetParameters {
+				alpha: *alpha as f64,
+				l1_ratio: *l1_ratio as f64,
+				normalize: *normalize,
+				tol: *tol as f64,
+				max_iter: *max_iter as usize,
+			};
+
+			let model = ElasticNet::fit(&x_train, &y_train, parameters)?;
+
+			let coefficients = model.coefficients();
+			let zipped_features: Vec<FeatureOutput> = included_features
+				.iter()
+				.map(|f| f.clone())
+				.zip(coefficients.iter().map(|c| *c))
+				.zip(config.features().iter().map(|f| f.1 ))
+				.map(|((col, coef), feat)| (col, coef, feat).into())
+				.collect();
+
+			let intercept = model.intercept();
+
+			let predictions = model.predict(&x_test)?;
+			let mae = mean_absolute_error(&y_test, &predictions);
+			let mse = mean_squared_error(&y_test, &predictions);
+			let r2_score = r2(&y_test, &predictions);
+			
+			let accuracy = Accuracy::new(mae, mse, r2_score);
+
+			Output::new(
+				*config.model(),
+				zipped_features,
+				*intercept,
+				accuracy,
+			)
+		},
+	};
 
 	Ok(())
 }

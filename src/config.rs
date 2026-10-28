@@ -9,6 +9,18 @@ use clap::{
 	ValueEnum,
 };
 use serde::Deserialize;
+use smartcore::linear::{
+	linear_regression::{
+		LinearRegressionParameters,
+		LinearRegressionSolverName,
+	},
+	ridge_regression::{
+		RidgeRegressionParameters,
+		RidgeRegressionSolverName,
+	},
+};
+
+use crate::Column;
 
 const DEFAULT_DATA_DIR: &str = "./computed-metrics";
 const DEFAULT_MODEL_DIR: &str = "./models";
@@ -24,8 +36,9 @@ struct CliArgs {
 pub struct GeneralConfig {
 	input_data_dir: String,
 	output_name: String,
-	splitting_seed: Option<u32>,
 	test_size: f32,
+	shuffle: bool,
+	splitting_seed: Option<u64>,
 }
 
 impl GeneralConfig {
@@ -37,12 +50,16 @@ impl GeneralConfig {
 		&self.output_name
 	}
 
-	pub fn splitting_seed(&self) -> Option<u32> {
-		self.splitting_seed
+	pub fn shuffle(&self) -> bool {
+		self.shuffle
 	}
 
 	pub fn test_size(&self) -> f32 {
 		self.test_size
+	}
+
+	pub fn splitting_seed(&self) -> Option<u64> {
+		self.splitting_seed
 	}
 }
 
@@ -78,7 +95,7 @@ fn default_exp() -> f32 {
 	1.0
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Copy, Clone)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Model {
 	LinearRegression {
@@ -105,23 +122,43 @@ pub enum Model {
 	},
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Copy, Clone)]
 pub enum LinearRegressionSolver {
 	QR,
 	SVD,
 }
 
-#[derive(Debug, Deserialize)]
+impl From<&LinearRegressionSolver> for LinearRegressionSolverName {
+	fn from(value: &LinearRegressionSolver) -> Self {
+		match value {
+			LinearRegressionSolver::QR => LinearRegressionSolverName::QR,
+			LinearRegressionSolver::SVD => LinearRegressionSolverName::SVD,
+		}
+	}
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
 pub enum RidgeRegressionSolver {
 	Cholesky,
 	SVD,
+}
+
+impl From<&RidgeRegressionSolver> for RidgeRegressionSolverName {
+	fn from(value: &RidgeRegressionSolver) -> Self {
+		match value {
+			RidgeRegressionSolver::Cholesky => {
+				RidgeRegressionSolverName::Cholesky
+			},
+			RidgeRegressionSolver::SVD => RidgeRegressionSolverName::SVD,
+		}
+	}
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
 	general: GeneralConfig,
 	model: Model,
-	features: HashMap<String, FeatureConfig>,
+	features: Vec<(String, FeatureConfig)>,
 }
 
 impl Config {
@@ -133,21 +170,22 @@ impl Config {
 		&self.model
 	}
 
-	pub fn features(&self) -> &HashMap<String, FeatureConfig> {
+	pub fn features(&self) -> &Vec<(String, FeatureConfig)> {
 		&self.features
 	}
 
-	pub fn included_features(&self) -> HashMap<String, FeatureConfig> {
-		let mut map: HashMap<String, FeatureConfig> = HashMap::new();
+	pub fn included_features(
+		&self
+	) -> Result<Vec<(Column, FeatureConfig)>, Box<dyn Error>> {
+		let mut output: Vec<(Column, FeatureConfig)> = Vec::new();
 
-		map.extend(
-			self.features
-				.iter()
-				.filter(|(_, feature_config)| feature_config.include())
-				.map(|(key, value)| (key.clone(), (value.clone())))
-		);
+		for (feature, feature_config) in &self.features {
+			if feature_config.include() {
+				output.push((feature.as_str().try_into()?, *feature_config))
+			}
+		}
 
-		map
+		Ok(output)
 	}
 }
 
