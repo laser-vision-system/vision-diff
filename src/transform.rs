@@ -1,16 +1,12 @@
-use std::{
-	collections::HashMap,
-	error::Error,
-};
+use std::error::Error;
 
 use smartcore::linalg::basic::matrix::DenseMatrix;
 
 use crate::{
-	CSVRowItem,
-	Column,
-	config::{
-		Config,
-		FeatureConfig,
+	config::Config,
+	types::{
+		CSVRowItem,
+		Column,
 	},
 };
 

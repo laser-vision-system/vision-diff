@@ -1,0 +1,69 @@
+
+# The dataset to compute the metrics for
+dataset = "InLabSingle"
+
+# The blur you would like to apply to the dataset before computing metrics
+# Each blur value will produce a new csv
+blur = [0.0, 0.8, 1.1, 1.4, 1.7]
+
+# The positions you wish to exclude from computing metrics.
+
+# Since the compute metrics program can be quite time consuming,
+# it is worthwhile to remove any data that is likely to contaminate a linear model.
+exclude = [
+    "forwards-incorrect_mount-0-impure-backplate-light_strips",
+    "forwards-incorrect_mount-0-impure-no_backplate-light_strips",
+    "forwards-top-0-impure-no_backplate-shutters_open",
+    "forwards-top-0-impure-no_backplate-shutters_open-light_strips",
+    "rearwards-incorrect_mount-0-impure-backplate-light_strips",
+    "rearwards-incorrect_mount-0-impure-no_backplate-light_strips",
+    ]
+
+
+# These configurations allow you limit what images the metrics are computed for
+# based on camera controls.
+# They are intended to further exclude data that may contaminate a linear model.
+[[controls]]
+control = "WhiteBalance"
+# min = -32768.0
+# max = 32768.0
+
+[[controls]]
+control = "Brightness"
+# min = -32768.0
+# max = 32768.0
+
+[[controls]]
+control = "Contrast"
+# min = -32768.0
+# max = 32768.0
+
+[[controls]]
+control = "Hue"
+# min = -32768.0
+# max = 32768.0
+
+[[controls]]
+control = "Saturation"
+# min = -32768.0
+# max = 32768.0
+
+[[controls]]
+control = "Sharpness"
+# min = -32768.0
+# max = 32768.0
+
+[[controls]]
+control = "Gamma"
+# min = -32768.0
+# max = 32768.0
+
+[[controls]]
+control = "Gain"
+# min = -32768.0
+# max = 32768.0
+
+[[controls]]
+control = "ExposureAbsolute"
+# min = -32768.0
+# max = 32768.0

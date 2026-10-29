@@ -18,11 +18,9 @@ use dataset_loader::{
 	},
 };
 
-use crate::{
-	item::{self, LoadedItem}, mapping::{
-		AnalogousItemMapper,
-		InLabSingleItemMapper,
-	},
+use crate::mapping::{
+	AnalogousItemMapper,
+	InLabSingleItemMapper,
 };
 
 pub fn analogous_dataset(
@@ -111,6 +109,5 @@ where
 	MO: Send + Sync + Clone + LoadedItem<G, D>,
 {
 	pub fn build_hashmap() -> HashMap<G, Vec<D>> {
-		
 	}
 }

@@ -1,5 +1,4 @@
 use std::{
-	collections::HashMap,
 	error::Error,
 	path::{
 		Path,
@@ -7,30 +6,22 @@ use std::{
 	},
 };
 
-use clap::{
-	Parser,
-	ValueEnum,
-};
+use clap::Parser;
 use serde::{
 	Deserialize,
 	Serialize,
 };
 use smartcore::linear::{
-	linear_regression::{
-		LinearRegressionParameters,
-		LinearRegressionSolverName,
-	},
-	ridge_regression::{
-		RidgeRegressionParameters,
-		RidgeRegressionSolverName,
-	},
+	linear_regression::LinearRegressionSolverName,
+	ridge_regression::RidgeRegressionSolverName,
 };
 
-use crate::Column;
+use crate::types::Column;
 
 const DEFAULT_DATA_DIR: &str = "./computed-metrics";
 const DEFAULT_MODEL_DIR: &str = "./models";
-const DEFAULT_CONFIG_DIR: &str = "./config";
+const DEFAULT_TRAIN_CONFIG_DIR: &str = "./config/train";
+const DEFAULT_COMPUTE_CONFIG_DIR: &str = "./config/compute";
 
 #[derive(Debug, Parser)]
 struct CliArgs {
@@ -80,6 +71,7 @@ impl FeatureConfig {
 	pub fn column(&self) -> &Column {
 		&self.feature
 	}
+
 	pub fn include(&self) -> bool {
 		self.include
 	}
@@ -225,12 +217,12 @@ impl Config {
 pub fn read_config() -> Result<Config, Box<dyn Error>> {
 	let args = CliArgs::try_parse()?;
 	let config_contents = std::fs::read_to_string(
-		Path::new(DEFAULT_CONFIG_DIR).join(args.config),
+		Path::new(DEFAULT_TRAIN_CONFIG_DIR).join(args.config),
 	)?;
 	let config: Config = toml::from_str(&config_contents)?;
 
 	#[cfg(debug_assertions)]
-    println!("Successfully read in config!");
+	println!("Successfully read in config!");
 
 	Ok(config)
 }
