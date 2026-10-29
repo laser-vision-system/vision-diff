@@ -4,6 +4,7 @@ use std::{
 		Path,
 		PathBuf,
 	},
+	sync::OnceLock,
 };
 
 use clap::Parser;
@@ -22,6 +23,9 @@ const DEFAULT_DATA_DIR: &str = "./computed-metrics";
 const DEFAULT_MODEL_DIR: &str = "./models";
 const DEFAULT_TRAIN_CONFIG_DIR: &str = "./config/train";
 const DEFAULT_COMPUTE_CONFIG_DIR: &str = "./config/compute";
+pub const DEFAULT_COMPUTE_OUTPUT_DIR: &str = "./computed-metrics";
+
+pub static STATIC_COMPUTE_CONFIG: OnceLock<ComputeMetricsConfig> = OnceLock::new();
 
 #[derive(Debug, Parser)]
 struct CliArgs {
@@ -272,7 +276,8 @@ pub enum CameraControl {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ComputeMetricsConfig {
 	dataset: Dataset,
-	blur: Vec<f32>,
+	output_name: String,
+	blur_sigmas: Vec<f32>,
 	exclude_position: Vec<String>,
 	controls: Vec<CameraControlConfig>,
 }
@@ -282,8 +287,12 @@ impl ComputeMetricsConfig {
 		self.dataset
 	}
 
-	pub fn blur(&self) -> &Vec<f32> {
-		&self.blur
+	pub fn output_name(&self) -> &String {
+		&self.output_name
+	}
+
+	pub fn blur_sigmas(&self) -> &Vec<f32> {
+		&self.blur_sigmas
 	}
 
 	pub fn exclude_position(&self) -> &Vec<String> {
@@ -295,7 +304,7 @@ impl ComputeMetricsConfig {
 	}
 }
 
-pub fn read_copmute_metrics_config()
+pub fn read_compute_metrics_config()
 -> Result<ComputeMetricsConfig, Box<dyn Error>> {
 	let args = CliArgs::try_parse()?;
 	let config_contents = std::fs::read_to_string(

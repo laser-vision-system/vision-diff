@@ -2,9 +2,15 @@
 # The dataset to compute the metrics for
 dataset = "InLabSingle"
 
+# The name of the resulting csv file.
+# The file will automatically be appended with the blur sigma.
+output_name = "in-lab-single"
+
 # The blur you would like to apply to the dataset before computing metrics
-# Each blur value will produce a new csv
-blur = [0.0, 0.8, 1.1, 1.4, 1.7]
+# Each blur value will run the entire program again for blurred images.
+# There must be at least one value in this array.
+# For no blur, use `0.0`.
+blur_sigmas = [0.0, 0.8, 1.1, 1.4, 1.7]
 
 # The positions you wish to exclude from computing metrics.
 

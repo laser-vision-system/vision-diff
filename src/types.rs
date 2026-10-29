@@ -18,7 +18,7 @@ use crate::config::{
 /// model using this application.
 ///
 /// Is tied to the Column enum.
-#[derive(PartialEq, Debug, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct CSVRowItem {
 	peak_diff: f32,
 	mean_diff: f32,
