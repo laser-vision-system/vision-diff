@@ -153,13 +153,13 @@ impl From<&RidgeRegressionSolver> for RidgeRegressionSolverName {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Config {
+pub struct TrainConfig {
 	general: GeneralConfig,
 	model: Model,
 	features: Vec<FeatureConfig>,
 }
 
-impl Config {
+impl TrainConfig {
 	pub fn general(&self) -> &GeneralConfig {
 		&self.general
 	}
@@ -214,12 +214,12 @@ impl Config {
 	}
 }
 
-pub fn read_config() -> Result<Config, Box<dyn Error>> {
+pub fn read_train_config() -> Result<TrainConfig, Box<dyn Error>> {
 	let args = CliArgs::try_parse()?;
 	let config_contents = std::fs::read_to_string(
 		Path::new(DEFAULT_TRAIN_CONFIG_DIR).join(args.config),
 	)?;
-	let config: Config = toml::from_str(&config_contents)?;
+	let config: TrainConfig = toml::from_str(&config_contents)?;
 
 	#[cfg(debug_assertions)]
 	println!("Successfully read in config!");
@@ -227,11 +227,84 @@ pub fn read_config() -> Result<Config, Box<dyn Error>> {
 	Ok(config)
 }
 
-// #[derive(Debug, Clone, ValueEnum)]
-// pub enum Dataset {
-// 	Synthetic1,
-// 	Synthetic2,
-// 	Analogous,
-// 	#[value(name = "in-lab-single")]
-// 	InLabSingle,
-// }
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum Dataset {
+	Synthetic1,
+	Synthetic2,
+	Analogous,
+	InLabSingle,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct CameraControlConfig {
+	control: CameraControl,
+	min: Option<f32>,
+	max: Option<f32>,
+}
+
+impl CameraControlConfig {
+	pub fn control(&self) -> &CameraControl {
+		&self.control
+	}
+
+	pub fn min(&self) -> Option<f32> {
+		self.min
+	}
+
+	pub fn max(&self) -> Option<f32> {
+		self.max
+	}
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub enum CameraControl {
+	WhiteBalance,
+	Brightness,
+	Contrast,
+	Hue,
+	Saturation,
+	Sharpness,
+	Gamma,
+	Gain,
+	ExposureAbsolute,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ComputeMetricsConfig {
+	dataset: Dataset,
+	blur: Vec<f32>,
+	exclude_position: Vec<String>,
+	controls: Vec<CameraControlConfig>,
+}
+
+impl ComputeMetricsConfig {
+	pub fn dataset(&self) -> Dataset {
+		self.dataset
+	}
+
+	pub fn blur(&self) -> &Vec<f32> {
+		&self.blur
+	}
+
+	pub fn exclude_position(&self) -> &Vec<String> {
+		&self.exclude_position
+	}
+
+	pub fn controls(&self) -> &Vec<CameraControlConfig> {
+		&self.controls
+	}
+}
+
+pub fn read_copmute_metrics_config()
+-> Result<ComputeMetricsConfig, Box<dyn Error>> {
+	let args = CliArgs::try_parse()?;
+	let config_contents = std::fs::read_to_string(
+		Path::new(DEFAULT_COMPUTE_CONFIG_DIR).join(args.config),
+	)?;
+	let config: ComputeMetricsConfig = toml::from_str(&config_contents)?;
+
+	#[cfg(debug_assertions)]
+	println!("Successfully read in config!");
+
+	Ok(config)
+}

@@ -10,7 +10,7 @@ blur = [0.0, 0.8, 1.1, 1.4, 1.7]
 
 # Since the compute metrics program can be quite time consuming,
 # it is worthwhile to remove any data that is likely to contaminate a linear model.
-exclude = [
+exclude_position = [
     "forwards-incorrect_mount-0-impure-backplate-light_strips",
     "forwards-incorrect_mount-0-impure-no_backplate-light_strips",
     "forwards-top-0-impure-no_backplate-shutters_open",

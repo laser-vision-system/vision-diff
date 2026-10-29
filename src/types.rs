@@ -1,4 +1,7 @@
+use std::collections::HashMap;
+
 use clap::ValueEnum;
+use image::GrayImage;
 use serde::{
 	Deserialize,
 	Serialize,
@@ -29,35 +32,83 @@ pub struct CSVRowItem {
 	peak: f32,
 	mean: f32,
 	std_dev: f32,
-	white_balance: f32,
-	brightness: f32,
-	contrast: f32,
-	hue: f32,
-	saturation: f32,
-	sharpness: f32,
-	gamma: f32,
-	gain: f32,
-	exposure_absolute: f32,
+	white_balance: Option<f32>,
+	brightness: Option<f32>,
+	contrast: Option<f32>,
+	hue: Option<f32>,
+	saturation: Option<f32>,
+	sharpness: Option<f32>,
+	gamma: Option<f32>,
+	gain: Option<f32>,
+	exposure_absolute: Option<f32>,
 }
 
 impl CSVRowItem {
+	pub fn new(
+		peak_diff: f32,
+		mean_diff: f32,
+		std_dev_diff: f32,
+		luma_ssim: f32,
+		hellinger: f32,
+		correlation: f32,
+		intersection: f32,
+		intensity: f32,
+		setpoint_intensity: f32,
+		peak: f32,
+		mean: f32,
+		std_dev: f32,
+		white_balance: Option<f32>,
+		brightness: Option<f32>,
+		contrast: Option<f32>,
+		hue: Option<f32>,
+		saturation: Option<f32>,
+		sharpness: Option<f32>,
+		gamma: Option<f32>,
+		gain: Option<f32>,
+		exposure_absolute: Option<f32>,
+	) -> Self {
+		CSVRowItem {
+			peak_diff,
+			mean_diff,
+			std_dev_diff,
+			luma_ssim,
+			hellinger,
+			correlation,
+			intersection,
+			intensity,
+			setpoint_intensity,
+			peak,
+			mean,
+			std_dev,
+			white_balance,
+			brightness,
+			contrast,
+			hue,
+			saturation,
+			sharpness,
+			gamma,
+			gain,
+			exposure_absolute,
+		}
+	}
+
 	pub fn get(
 		&self,
 		field: &Column,
-	) -> f32 {
+	) -> Option<f32> {
 		match field {
-			Column::PeakDiff => self.peak_diff,
-			Column::MeanDiff => self.mean_diff,
-			Column::StdDevDiff => self.std_dev_diff,
-			Column::LumaSSIM => self.luma_ssim,
-			Column::Hellinger => self.hellinger,
-			Column::Correlation => self.correlation,
-			Column::Intersection => self.intersection,
-			Column::Intensity => self.intensity,
-			Column::SetpointIntensity => self.setpoint_intensity,
-			Column::Peak => self.peak,
-			Column::Mean => self.mean,
-			Column::StdDev => self.std_dev,
+			Column::PeakDiff => Some(self.peak_diff),
+			Column::MeanDiff => Some(self.mean_diff),
+			Column::StdDevDiff => Some(self.std_dev_diff),
+			Column::LumaSSIM => Some(self.luma_ssim),
+			Column::Hellinger => Some(self.hellinger),
+			Column::Correlation => Some(self.correlation),
+			Column::Intersection => Some(self.intersection),
+			Column::Intensity => Some(self.intensity),
+			Column::SetpointIntensity => Some(self.setpoint_intensity),
+			Column::Peak => Some(self.peak),
+			Column::Mean => Some(self.mean),
+			Column::StdDev => Some(self.std_dev),
 			Column::WhiteBalance => self.white_balance,
 			Column::Brightness => self.brightness,
 			Column::Contrast => self.contrast,
@@ -168,21 +219,21 @@ impl TryFrom<&str> for Column {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Output {
+pub struct ModelOutput {
 	model: Model,
 	features: Vec<FeatureOutput>,
 	intercept: f32,
 	accuracy: Accuracy,
 }
 
-impl Output {
+impl ModelOutput {
 	pub fn new(
 		model: Model,
 		features: Vec<FeatureOutput>,
 		intercept: f32,
 		accuracy: Accuracy,
 	) -> Self {
-		Output {
+		ModelOutput {
 			model,
 			features,
 			intercept,
@@ -250,3 +301,142 @@ impl Accuracy {
 		}
 	}
 }
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct GroupDef {
+	position: String,
+	white_balance: Option<i64>,
+	brightness: Option<i64>,
+	contrast: Option<i64>,
+	hue: Option<i64>,
+	saturation: Option<i64>,
+	sharpness: Option<i64>,
+	gamma: Option<i64>,
+	gain: Option<i64>,
+	exposure_absolute: Option<i64>,
+}
+
+impl GroupDef {
+	pub fn new(
+		position: String,
+		white_balance: Option<i64>,
+		brightness: Option<i64>,
+		contrast: Option<i64>,
+		hue: Option<i64>,
+		saturation: Option<i64>,
+		sharpness: Option<i64>,
+		gamma: Option<i64>,
+		gain: Option<i64>,
+		exposure_absolute: Option<i64>,
+	) -> Self {
+		GroupDef {
+			position,
+			white_balance,
+			brightness,
+			contrast,
+			hue,
+			saturation,
+			sharpness,
+			gamma,
+			gain,
+			exposure_absolute,
+		}
+	}
+
+	pub fn position(&self) -> &str {
+		&self.position
+	}
+
+	pub fn white_balance(&self) -> Option<i64> {
+		self.white_balance
+	}
+
+	pub fn brightness(&self) -> Option<i64> {
+		self.brightness
+	}
+
+	pub fn contrast(&self) -> Option<i64> {
+		self.contrast
+	}
+
+	pub fn hue(&self) -> Option<i64> {
+		self.hue
+	}
+
+	pub fn saturation(&self) -> Option<i64> {
+		self.saturation
+	}
+
+	pub fn sharpness(&self) -> Option<i64> {
+		self.sharpness
+	}
+
+	pub fn gamma(&self) -> Option<i64> {
+		self.gamma
+	}
+
+	pub fn gain(&self) -> Option<i64> {
+		self.gain
+	}
+
+	pub fn exposure_absolute(&self) -> Option<i64> {
+		self.exposure_absolute
+	}
+}
+
+#[derive(Clone, Debug)]
+pub struct ItemData {
+	image: GrayImage,
+	intensity: f32,
+	peak: u8,
+	mean: f32,
+	std_dev: f32,
+}
+
+impl ItemData {
+	pub fn new(
+		image: GrayImage,
+		intensity: f32,
+		peak: u8,
+		mean: f32,
+		std_dev: f32,
+	) -> Self {
+		ItemData {
+			image,
+			intensity,
+			peak,
+			mean,
+			std_dev,
+		}
+	}
+
+	pub fn image(&self) -> &GrayImage {
+		&self.image
+	}
+
+	pub fn intensity(&self) -> f32 {
+		self.intensity
+	}
+
+	pub fn peak(&self) -> u8 {
+		self.peak
+	}
+
+	pub fn mean(&self) -> f32 {
+		self.mean
+	}
+
+	pub fn std_dev(&self) -> f32 {
+		self.std_dev
+	}
+}
+
+#[derive(Clone, Debug)]
+pub struct LoadedItem {
+	pub group: GroupDef,
+	pub image_data: ItemData,
+}
+
+pub type LoadedItemMap = HashMap<GroupDef, Vec<ItemData>>;
+
+pub type CSVRows = Vec<CSVRowItem>;

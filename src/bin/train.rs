@@ -31,15 +31,17 @@ use smartcore::{
 };
 use toml::to_string_pretty;
 use vision_diff::{
-	Accuracy,
-	CSVRowItem,
-	FeatureOutput,
-	Output,
 	config::{
 		Model,
-		read_config,
+		read_train_config,
 	},
 	transform::CSVMatrix,
+	types::{
+		Accuracy,
+		CSVRowItem,
+		FeatureOutput,
+		ModelOutput,
+	},
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -47,7 +49,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
-	let config = read_config()?;
+	let config = read_train_config()?;
 
 	if !config.model_dir_exists() {
 		return Err("Could not find model directory.".into());
@@ -77,7 +79,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 		config.general().splitting_seed(),
 	);
 
-	let output_model: Output = match config.model() {
+	let output_model: ModelOutput = match config.model() {
 		Model::LinearRegression {
 			solver,
 		} => {
@@ -105,7 +107,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
 			let accuracy = Accuracy::new(mae, mse, r2_score);
 
-			Output::new(*config.model(), zipped_features, *intercept, accuracy)
+			ModelOutput::new(*config.model(), zipped_features, *intercept, accuracy)
 		},
 
 		Model::RidgeRegression {
@@ -139,7 +141,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
 			let accuracy = Accuracy::new(mae, mse, r2_score);
 
-			Output::new(*config.model(), zipped_features, *intercept, accuracy)
+			ModelOutput::new(*config.model(), zipped_features, *intercept, accuracy)
 		},
 
 		Model::Lasso {
@@ -177,7 +179,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
 			let accuracy = Accuracy::new(mae, mse, r2_score);
 
-			Output::new(*config.model(), zipped_features, *intercept, accuracy)
+			ModelOutput::new(*config.model(), zipped_features, *intercept, accuracy)
 		},
 
 		Model::ElasticNet {
@@ -215,7 +217,12 @@ fn run() -> Result<(), Box<dyn Error>> {
 
 			let accuracy = Accuracy::new(mae, mse, r2_score);
 
-			Output::new(*config.model(), zipped_features, *intercept, accuracy)
+			ModelOutput::new(
+				*config.model(),
+				zipped_features,
+				*intercept,
+				accuracy,
+			)
 		},
 	};
 

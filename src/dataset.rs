@@ -1,113 +1,82 @@
-use std::collections::HashMap;
+use std::error::Error;
 
-use burn::data::dataset::transform::Mapper;
 use dataset_loader::{
 	self,
 	augmentation::blur::Gaussian,
-	dataset::LaserDataset,
 	item::LaserItem,
 	sources::{
-		analogous_laser::{
-			self,
-			AnalogousLaserItem,
-		},
-		in_lab_single_laser::{
-			self,
-			InLabSingleLaserItem,
-		},
+		StandardItem,
+		StandardLaserDataset,
+		build_standard_dataset,
 	},
 };
 
-use crate::mapping::{
-	AnalogousItemMapper,
-	InLabSingleItemMapper,
+use crate::{
+	config::{
+		CameraControl,
+		ComputeMetricsConfig,
+		Dataset,
+	},
+	mapping::StandardItemMapper,
+	transform::within_bounds,
+	types::LoadedItem,
 };
 
-pub fn analogous_dataset(
-	blur: Gaussian
-) -> LaserDataset<AnalogousItemMapper, AnalogousLaserItem, LoadedItem> {
-	#[cfg(debug_assertions)]
-	println!("Creating an analogous dataset...");
+fn filter(
+	item: &StandardItem,
+	config: ComputeMetricsConfig,
+) -> bool {
+	let mut return_bool = true;
+	let parent = item.get_image_path().get_parents();
+	let grandparent = &parent
+		.get(1)
+		.expect(
+			"There should always be a grandparent directory for images in the dataset.",
+		)
+		.as_ref()
+		.to_string();
 
-	let mapper = AnalogousItemMapper::new(blur);
-	let root = "datasets/analogous_laser";
-	let dataset = match analogous_laser::get_dataset(
-		mapper,
-		root,
-		&[Box::new(|item| {
-			let parents = item.get_image_path().get_parents();
-			let grandparent = parents.get(1).expect(
-				"the image should have a grandparent directory for the position",
-			);
-			grandparent != "rearwards_close_outer_0-impure"
-				&& grandparent != "rearwards_far_outer_270"
-				&& grandparent != "not_applicable"
-		})],
-	) {
-		Ok(value) => value,
-		Err(error) => {
-			eprintln!("Error building dataset: {error}");
-			panic!();
-		},
-	};
-	dataset
-}
+	return_bool =
+		return_bool && config.exclude_position().contains(grandparent);
 
-pub fn in_lab_single_dataset(
-	blur: Gaussian
-) -> LaserDataset<InLabSingleItemMapper, InLabSingleLaserItem, LoadedItem> {
-	#[cfg(debug_assertions)]
-	println!("Creating an in-lab-single-laser dataset...");
-
-	let mapper = InLabSingleItemMapper::new(blur);
-	let root = "datasets/in_lab_single_laser";
-	let dataset = match in_lab_single_laser::get_dataset(
-		mapper,
-		root,
-		&[Box::new(|item| {
-			let parents = item.get_image_path().get_parents();
-			let grandparent = parents.get(1).expect(
-				"the image should have a grandparent directory for the position",
-			);
-			grandparent != "rearwards_close_outer_0-impure"
-				&& grandparent
-					!= "forwards-incorrect_mount-0-impure-backplate-light_strips"
-				&& grandparent
-					!= "forwards-incorrect_mount-0-impure-no_backplate-light_strips"
-				&& grandparent
-					!= "forwards-top-0-impure-no_backplate-shutters_open"
-				&& grandparent
-					!= "forwards-top-0-impure-no_backplate-shutters_open-light_strips"
-				&& grandparent
-					!= "rearwards-incorrect_mount-0-impure-backplate-light_strips"
-				&& grandparent
-					!= "rearwards-incorrect_mount-0-impure-no_backplate-light_strips"
-		})],
-	) {
-		Ok(value) => value,
-		Err(error) => {
-			eprintln!("Error building dataset: {error}");
-			panic!();
-		},
-	};
-	dataset
-}
-
-pub struct Dataset<M, MI, MO, G, D>
-where
-	M: Mapper<MI, MO> + Send + Sync,
-	MI: Send + Sync + Clone + LaserItem,
-	MO: Send + Sync + Clone + LoadedItem<G, D>,
-{
-	dataset: LaserDataset<M, MI, MO>,
-}
-
-impl<M, MI, MO, G, D> Dataset<M, MI, MO, G, D>
-where
-	M: Mapper<MI, MO> + Send + Sync,
-	MI: Send + Sync + Clone + LaserItem,
-	MO: Send + Sync + Clone + LoadedItem<G, D>,
-{
-	pub fn build_hashmap() -> HashMap<G, Vec<D>> {
+	for control in config.controls() {
+		if let Some(value) = match control.control() {
+			CameraControl::WhiteBalance => item.white_balance(),
+			CameraControl::Brightness => item.brightness(),
+			CameraControl::Contrast => item.contrast(),
+			CameraControl::Hue => item.hue(),
+			CameraControl::Saturation => item.saturation(),
+			CameraControl::Sharpness => item.sharpness(),
+			CameraControl::Gamma => item.gamma(),
+			CameraControl::Gain => item.gain(),
+			CameraControl::ExposureAbsolute => item.exposure_absolute(),
+		} {
+			return_bool = return_bool
+				&& within_bounds(
+					Some(*value.value() as f32),
+					control.min(),
+					control.max(),
+				);
+		}
 	}
+	return_bool
+}
+
+pub fn standard_dataset(
+	blur: Gaussian,
+	config: &'static ComputeMetricsConfig,
+) -> Result<StandardLaserDataset<StandardItemMapper, LoadedItem>, Box<dyn Error>>
+{
+	let mapper = StandardItemMapper::new(blur);
+	let root = match config.dataset() {
+		Dataset::Synthetic1 => "./datasets/synthetic_1",
+		Dataset::Synthetic2 => "./datasets/synthetic_2",
+		Dataset::Analogous => "./datasets/analogous_laser",
+		Dataset::InLabSingle => "./datasets/in_lab_single_laser",
+	};
+	Ok(build_standard_dataset(
+		mapper,
+		root,
+		&[Box::new(|item| filter(item, config.clone()))],
+	)?)
 }
