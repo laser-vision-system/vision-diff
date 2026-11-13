@@ -1,86 +1,47 @@
-use burn::data::dataset::transform::Mapper;
+use burn::data::dataset::{
+	Dataset,
+	transform::Mapper,
+};
 use dataset_loader::{
+	self,
 	augmentation::{
 		ImageStep,
 		blur::Gaussian,
 	},
-	item::LaserItem,
-	sources::{
-		analogous_laser::AnalogousLaserItem,
-		in_lab_single_laser::InLabSingleLaserItem,
+	item::{
+		LaserItem,
+		controls::GeneralCameraControl,
 	},
-};
-use image::{
-	GrayImage,
+	sources::{
+		StandardItem,
+		StandardLaserDataset,
+	},
 };
 use rand::{
 	SeedableRng,
 	rngs::StdRng,
 };
 
-use crate::metric_extraction::compute_brightness_stats;
+use crate::{
+	metric_extraction::{
+		collect_metrics,
+		compute_brightness_stats,
+	},
+	types::{
+		CSVRowItem,
+		CSVRows,
+		GroupDef,
+		ItemData,
+		LoadedItem,
+		LoadedItemMap,
+	},
+};
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct GroupDef {
-	position: String,
-	saturation: u8,
-	exposure: u16,
-	gamma: u16,
-}
-
-impl GroupDef {
-    pub fn position(&self) -> &str {
-        &self.position
-    }
-    pub fn saturation(&self) -> u8 {
-        self.saturation
-    }
-    pub fn exposure(&self) -> u16 {
-        self.exposure
-    }
-    pub fn gamma(&self) -> u16 {
-        self.gamma
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct ItemData {
-	image: GrayImage,
-	intensity: f32,
-	peak: u8,
-	mean: f32,
-	std_dev: f32,
-}
-
-impl ItemData {
-    pub fn image(&self) -> &GrayImage {
-        &self.image
-    }
-    pub fn intensity(&self) -> f32 {
-        self.intensity
-    }
-    pub fn peak(&self) -> u8 {
-        self.peak
-    }
-    pub fn mean(&self) -> f32 {
-        self.mean
-    }
-    pub fn std_dev(&self) -> f32 {
-        self.std_dev
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct LoadedItem {
-	pub group: GroupDef,
-	pub image_data: ItemData,
-}
-
-pub struct AnalogousItemMapper {
+pub struct StandardItemMapper {
 	blur: Gaussian,
 }
 
-impl AnalogousItemMapper {
+impl StandardItemMapper {
 	pub fn new(blur: Gaussian) -> Self {
 		Self {
 			blur,
@@ -88,10 +49,10 @@ impl AnalogousItemMapper {
 	}
 }
 
-impl Mapper<AnalogousLaserItem, LoadedItem> for AnalogousItemMapper {
+impl Mapper<StandardItem, LoadedItem> for StandardItemMapper {
 	fn map(
 		&self,
-		item: &AnalogousLaserItem,
+		item: &StandardItem,
 	) -> LoadedItem {
 		let parents = item.get_image_path().get_parents();
 		let position = parents.get(1).expect(
@@ -99,9 +60,6 @@ impl Mapper<AnalogousLaserItem, LoadedItem> for AnalogousItemMapper {
 		);
 
 		let intensity = *item.get_intensity();
-		let saturation = item.get_saturation();
-		let exposure = item.get_exposure_absolute();
-		let gamma = item.get_gamma();
 
 		let image = item
 			.load()
@@ -111,85 +69,94 @@ impl Mapper<AnalogousLaserItem, LoadedItem> for AnalogousItemMapper {
 		let mut rng = StdRng::seed_from_u64(0);
 		let image = self.blur.apply(image, &mut rng);
 
-		let group = GroupDef {
-			position: position.to_string(),
-			saturation,
-			exposure,
-			gamma,
-		};
-
-		let (peak, mean, std_dev) = compute_brightness_stats(&image);
-
-		let image_data = ItemData {
-			image,
-			intensity,
-			peak,
-			mean,
-			std_dev,
-		};
-
-		LoadedItem {
-			group,
-			image_data,
-		}
-	}
-}
-
-pub struct InLabSingleItemMapper {
-	blur: Gaussian,
-}
-
-impl InLabSingleItemMapper {
-	pub fn new(blur: Gaussian) -> Self {
-		Self {
-			blur,
-		}
-	}
-}
-
-impl Mapper<InLabSingleLaserItem, LoadedItem> for InLabSingleItemMapper {
-	fn map(
-		&self,
-		item: &InLabSingleLaserItem,
-	) -> LoadedItem {
-		let parents = item.get_image_path().get_parents();
-		let position = parents.get(1).expect(
-			"the image should have a grandparent directory for the position",
+		let group = GroupDef::new(
+			position.to_string(),
+			get_camera_control_value(item.white_balance()),
+			get_camera_control_value(item.brightness()),
+			get_camera_control_value(item.contrast()),
+			get_camera_control_value(item.hue()),
+			get_camera_control_value(item.saturation()),
+			get_camera_control_value(item.sharpness()),
+			get_camera_control_value(item.gamma()),
+			get_camera_control_value(item.gain()),
+			get_camera_control_value(item.exposure_absolute()),
 		);
 
-		let intensity = *item.get_intensity();
-		let saturation = item.get_saturation();
-		let exposure = item.get_exposure_absolute();
-		let gamma = item.get_gamma();
-
-		let image = item
-			.load()
-			.expect("The image failed to load apparently")
-			.into_luma8();
-
-		let mut rng = StdRng::seed_from_u64(0);
-		let image = self.blur.apply(image, &mut rng);
-
-		let group = GroupDef {
-			position: position.to_string(),
-			saturation,
-			exposure,
-			gamma,
-		};
-
 		let (peak, mean, std_dev) = compute_brightness_stats(&image);
 
-		let image_data = ItemData {
-			image,
-			intensity,
-			peak,
-			mean,
-			std_dev,
-		};
+		let image_data = ItemData::new(image, intensity, peak, mean, std_dev);
 
 		LoadedItem {
 			group,
 			image_data,
 		}
 	}
+}
+
+fn get_camera_control_value(
+	control: Option<GeneralCameraControl>
+) -> Option<i64> {
+	match control {
+		Some(inner) => Some(*inner.value()),
+		None => None,
+	}
+}
+
+pub fn build_hashmap(
+	dataset: StandardLaserDataset<StandardItemMapper, LoadedItem>
+) -> LoadedItemMap {
+	let hashmap: LoadedItemMap = dataset
+		.iter()
+		.map(|item: LoadedItem| (item.group, item.image_data))
+		.fold(LoadedItemMap::new(), |mut map, (group, data)| {
+			map.entry(group).or_default().push(data);
+			map
+		});
+
+	hashmap
+}
+
+pub fn hashmap_to_rows(map: &LoadedItemMap) -> CSVRows {
+	let mut rows = Vec::new();
+	for (group, items) in map {
+		for item in items {
+			for setpoint in items {
+				let (
+					peak_diff,
+					mean_diff,
+					std_dev_diff,
+					luma_ssim,
+					hellinger,
+					correlation,
+					intersection,
+				) = collect_metrics(&item, &setpoint);
+
+				let row = CSVRowItem::new(
+					peak_diff,
+					mean_diff,
+					std_dev_diff,
+					luma_ssim,
+					hellinger,
+					correlation,
+					intersection,
+					item.intensity(),
+					setpoint.intensity(),
+					item.peak().into(),
+					item.mean(),
+					item.std_dev(),
+					group.white_balance().map(|value| value as f32),
+					group.brightness().map(|value| value as f32),
+					group.contrast().map(|value| value as f32),
+					group.hue().map(|value| value as f32),
+					group.saturation().map(|value| value as f32),
+					group.sharpness().map(|value| value as f32),
+					group.gamma().map(|value| value as f32),
+					group.gain().map(|value| value as f32),
+					group.exposure_absolute().map(|value| value as f32),
+				);
+				rows.push(row)
+			}
+		}
+	}
+	rows
 }

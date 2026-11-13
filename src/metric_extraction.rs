@@ -6,7 +6,7 @@ use image_compare::{
 	gray_similarity_structure,
 };
 
-use crate::mapping::ItemData;
+use crate::types::ItemData;
 
 pub fn compute_brightness_stats(img: &GrayImage) -> (u8, f32, f32) {
 	let pixels: Vec<u8> = img.pixels().map(|p| p.0[0]).collect();
@@ -39,18 +39,31 @@ pub fn collect_metrics(
 		(item.peak(), item.mean(), item.std_dev());
 	let (setpoint_peak, setpoint_mean, setpoint_std_dev) =
 		(setpoint.peak(), setpoint.mean(), setpoint.std_dev());
-	let luma_ssim =
-		gray_similarity_structure(&Algorithm::MSSIMSimple, item.image(), setpoint.image())
-			.unwrap()
-			.score;
-	let hellinger =
-		gray_similarity_histogram(Metric::Hellinger, item.image(), setpoint.image()).unwrap();
-	let correlation =
-		gray_similarity_histogram(Metric::Correlation, item.image(), setpoint.image())
-			.unwrap();
-	let intersection =
-		gray_similarity_histogram(Metric::Intersection, item.image(), setpoint.image())
-			.unwrap();
+	let luma_ssim = gray_similarity_structure(
+		&Algorithm::MSSIMSimple,
+		item.image(),
+		setpoint.image(),
+	)
+	.unwrap()
+	.score;
+	let hellinger = gray_similarity_histogram(
+		Metric::Hellinger,
+		item.image(),
+		setpoint.image(),
+	)
+	.unwrap();
+	let correlation = gray_similarity_histogram(
+		Metric::Correlation,
+		item.image(),
+		setpoint.image(),
+	)
+	.unwrap();
+	let intersection = gray_similarity_histogram(
+		Metric::Intersection,
+		item.image(),
+		setpoint.image(),
+	)
+	.unwrap();
 
 	#[cfg(debug_assertions)]
 	println!("Metrics collected!");
