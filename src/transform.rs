@@ -100,7 +100,7 @@ pub fn within_bounds(
 	max: Option<f32>,
 ) -> bool {
 	min.is_none_or(|min| value.is_none_or(|value| value >= min))
-		&& max.is_none_or(|max| value.is_none_or(|value| value >= max))
+		&& max.is_none_or(|max| value.is_none_or(|value| value <= max))
 }
 
 #[derive(Debug)]
