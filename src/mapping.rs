@@ -107,7 +107,8 @@ pub fn build_hashmap(
 ) -> LoadedItemMap {
 	let hashmap: LoadedItemMap = dataset
 		.iter()
-		.map(|item: LoadedItem| (item.group, item.image_data))
+		.filter_map(|result| result.ok())
+		.map(|item| (item.group, item.image_data))
 		.fold(LoadedItemMap::new(), |mut map, (group, data)| {
 			map.entry(group).or_default().push(data);
 			map
